@@ -1,0 +1,22 @@
+{
+  "desktop": {
+    "complete": 0,
+    "failed": 0,
+    "pending": 0
+  },
+  "mobile": {
+    "complete": 0,
+    "failed": 0,
+    "pending": 0
+  },
+  "block": {
+    "complete": 0,
+    "failed": 0,
+    "pending": 0
+  },
+  "ignore": {
+    "complete": 0,
+    "failed": 0,
+    "pending": 0
+  }
+}

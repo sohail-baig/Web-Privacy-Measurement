@@ -1,0 +1,15 @@
+{
+  "draft": true,
+  "html_hash": "498e4f5bbc1d3adf0c61ffc59e4250b56bb306c0a26ca85360acc66364559105",
+  "pdf_hash": "fe62bc905ba459885a7bb7b704c3c2b2e6a68b9ca58e1921ce50256dd3d45a2e",
+  "input_hashes": {
+    "report/__init__.py": "678dcf613bdaafcca225a2f97d83bc003dc97f38e6e8b32427480b85313a4b01",
+    "report/individual-contribution.md": "94240b86e49eab7936816c98e07324727eff3997e3dabf2a5e98777c693f9105",
+    "report/render.py": "78c0290dc8541821a3896d4fef7efac7c932ae319e910c071a2a70169a226dd3",
+    "report/template.html": "498e4f5bbc1d3adf0c61ffc59e4250b56bb306c0a26ca85360acc66364559105",
+    "analysis/output/coverage.json": "dffbd3e827aa3af4b9e3ca5ab0e7ad02a0ef3e5398cc61cec575fca570fa38a1",
+    "analysis/output/provenance.json": "6ccd36e62ed598a66ace40e85053193601cb2cfb017686dc63d2246acc3860e3",
+    "analysis/output/requests.csv": "b3a63a9529da8b6249caf75df7c76301cf3ac82738bbc898c9fc5c4825a4495e",
+    "analysis/output/visits.csv": "69c30fab698b1b3112d03125241f6e2dd491c88fb8212017365a9e992fb0abdf"
+  }
+}

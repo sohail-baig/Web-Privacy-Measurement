@@ -1,0 +1,37 @@
+[
+  {
+    "path": "sites.csv",
+    "sha256": "b34c3ca0ed5025911c314dd35fd7f84d20bc6140f5e5d06bc90070a304779c61",
+    "url": "https://gist.githubusercontent.com/gunesacar/52a18520ba2158e6c24ee8df67dfe5ef/raw",
+    "downloaded_at": "2026-11-03T20:28:21.8711179Z",
+    "revision": "instructor gist, downloaded snapshot"
+  },
+  {
+    "path": "crawler_src/reference_data/services.json",
+    "sha256": "dbaa85efd07c769c2b53bda72bd60c34c0532fd88b02dac98aae328fe1765746",
+    "url": "https://raw.githubusercontent.com/disconnectme/disconnect-tracking-protection/a277cd6/services.json",
+    "downloaded_at": "2026-11-03T20:28:22.3973268Z",
+    "revision": "a277cd6"
+  },
+  {
+    "path": "crawler_src/reference_data/entities.json",
+    "sha256": "7b863428b5489d75898fa6edc479fe09087f749f43abc9c51b87ac3470766464",
+    "url": "https://raw.githubusercontent.com/disconnectme/disconnect-tracking-protection/cb1b0c1/entities.json",
+    "downloaded_at": "2026-11-03T20:28:22.8985720Z",
+    "revision": "cb1b0c1"
+  },
+  {
+    "path": "crawler_src/reference_data/public_suffix_list.dat",
+    "sha256": "617d1b276660e5a01209d7b58159450e400cf636634a7a9c2cfd50a1c6675d01",
+    "url": "https://publicsuffix.org/list/public_suffix_list.dat",
+    "downloaded_at": "2026-11-03T20:28:23.1309613Z",
+    "revision": "downloaded snapshot"
+  },
+  {
+    "path": "crawler_src/reference_data/DISCONNECT-LICENSE",
+    "sha256": "61dfa5571c8bda07d18de159f2d71173eafb38312c74ee41b5eed5f5423a4da2",
+    "url": "https://raw.githubusercontent.com/disconnectme/disconnect-tracking-protection/a277cd6/LICENSE",
+    "downloaded_at": "2026-11-03T20:28:23.4649231Z",
+    "revision": "a277cd6"
+  }
+]

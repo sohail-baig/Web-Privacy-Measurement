@@ -1,0 +1,15 @@
+{
+  "manifests": {
+    "desktop": null,
+    "mobile": null,
+    "block": null,
+    "ignore": null
+  },
+  "reference_hashes": {
+    "services.json": "dbaa85efd07c769c2b53bda72bd60c34c0532fd88b02dac98aae328fe1765746",
+    "entities.json": "7b863428b5489d75898fa6edc479fe09087f749f43abc9c51b87ac3470766464",
+    "public_suffix_list.dat": "617d1b276660e5a01209d7b58159450e400cf636634a7a9c2cfd50a1c6675d01"
+  },
+  "loader_hash": "e46e64c6af618cbd6c8d2e1751b1c1e5f9d4d6fe2ee3325e7d7305e8785e1d16",
+  "classifier_hash": "88799b1467417bc8e2853735e5db85a5b9cdc26446ac244eb8f35db0a14bdb01"
+}
