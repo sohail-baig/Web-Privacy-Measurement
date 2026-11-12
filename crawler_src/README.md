@@ -11,7 +11,7 @@ python crawler_src/crawl.py -m block -l sites.csv
 
 Add `--output-root PATH` to isolate a run. Modes run sequentially, one fresh context per site. Do not run two processes into the same root.
 
-`consent.py` is deliberately unfinished. Until its handler is implemented and `IMPLEMENTED=True`, the three accept-consent modes fail before visiting sites. Tests inject a fixture handler; the CLI cannot bypass this gate. A `not_found` result means the implemented detector found no dialog; verify these visits manually.
+`consent.py` implements local English/Dutch consent handling across visible cookie/consent containers, dialogs, frames and open shadow roots. It prefers accept-all controls and verifies dismissal. Unknown detected dialogs or unsuccessful clicks fail the visit. `not_found` only means the detector found no supported dialog; verify these screenshots manually. Preference-only flows and closed shadow roots are limitations. No URL-specific handling, extensions or online APIs are used.
 
 Normal sequence: load → 10s → pre screenshot → accept → 5s → post screenshot → stepped scroll → 5s → close. Ignore skips accept, the associated 5s wait and the second screenshot. Scrolling stops at the bottom, after three unchanged positions, or at a 30s cap. Consent dialogs are never dismissed to enable Ignore scrolling.
 

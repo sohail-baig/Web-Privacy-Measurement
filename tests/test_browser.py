@@ -27,7 +27,7 @@ class LocalPage(BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/javascript')
         else:
             body = b'''<!doctype html><html><body style="height:2400px">
-            <div id="banner"><button onclick="document.querySelector('#banner').remove()">Accept all</button></div>
+            <div id="banner" role="dialog">We use cookies.<button onclick="document.querySelector('#banner').remove()">Accept all</button></div>
             <script>document.body.dataset.previousCookie = document.cookie; document.cookie='fixture=1';</script>
             <script src="/tracker.js"></script><h1>Local measurement fixture</h1></body></html>'''
             self.send_response(200)
@@ -122,3 +122,20 @@ class BrowserTests(unittest.TestCase):
             self.assertTrue((root/'report.pdf').read_bytes().startswith(b'%PDF-'))
             self.assertGreater((root/'report.pdf').stat().st_size, 10000)
             self.assertTrue(json.loads((root/'report/build.json').read_text())['draft'])
+
+    def test_desktop_production_consent_capture_and_resume(self):
+        refs = ReferenceData()
+        sites = [Site('fixture.example','nl')]
+        def local_visit(browser, devices, site, mode, staging, references, handler):
+            return collect_visit(browser, devices, site, mode, staging, references, handler, self.url)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch('crawler_src.crawl.collect_visit', side_effect=local_visit):
+                result = crawl_sites(self.browser,self.playwright.devices,sites,'desktop',root,refs)
+                self.assertEqual(result, {'complete':1,'failed':0,'pending':0})
+                manifest = json.loads((root/'crawl_data_desktop/manifest.json').read_text())
+                self.assertEqual(manifest['visits']['fixture.example']['consent_outcome'],'accepted')
+                self.assertEqual(len(validate_artifacts(root/'crawl_data_desktop','fixture.example','desktop')),4)
+                before = len(LocalPage.hits)
+                self.assertEqual(crawl_sites(self.browser,self.playwright.devices,sites,'desktop',root,refs),result)
+                self.assertEqual(len(LocalPage.hits), before)

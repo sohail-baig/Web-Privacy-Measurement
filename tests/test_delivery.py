@@ -37,11 +37,11 @@ class DeliveryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 package_submission(root, '../escape')
 
-    def test_cli_rejects_unfinished_consent(self):
+    def test_desktop_cli_validates_input_before_browser_launch(self):
         root = Path(__file__).resolve().parents[1]
-        result = subprocess.run([sys.executable,'crawler_src/crawl.py','-m','desktop','-l','sites.csv'], cwd=root, capture_output=True, text=True)
+        result = subprocess.run([sys.executable,'crawler_src/crawl.py','-m','desktop','-l','missing-sites.csv'], cwd=root, capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
-        self.assertIn('Consent handling is unfinished', result.stderr)
+        self.assertIn('missing-sites.csv', result.stderr)
 
     def make_ready_fixture(self, root):
         for folder in ('crawler_src','analysis','report','tests'):
