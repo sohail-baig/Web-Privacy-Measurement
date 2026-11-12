@@ -32,10 +32,12 @@ class CrawlerTests(unittest.TestCase):
         self.refs = ReferenceData()
 
     def test_unimplemented_consent_fails_before_collection(self):
-        for mode in ('desktop','mobile','block'):
-            with self.subTest(mode=mode), self.assertRaisesRegex(NotImplementedError, 'consent'):
-                preflight(mode)
+        with patch('crawler_src.consent.IMPLEMENTED', False):
+            for mode in ('desktop','mobile','block'):
+                with self.subTest(mode=mode), self.assertRaisesRegex(NotImplementedError, 'consent'):
+                    preflight(mode)
         preflight('ignore')
+        preflight('desktop')
 
     def test_mobile_requires_real_pixel_descriptor(self):
         with self.assertRaisesRegex(ValueError, 'Pixel 10'):

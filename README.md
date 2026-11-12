@@ -1,6 +1,6 @@
 # Online Tracking & Privacy — Assignment 2
 
-Runnable foundation for NWI-IMC074. **This is not a completed assignment.** Ignore crawling, evidence capture, resume, data preparation, PDF rendering and packaging infrastructure work. Generic consent detection and Q1–Q12 remain student tasks. The PDF is a visibly marked draft.
+Runnable foundation for NWI-IMC074. **This is not a completed assignment.** Ignore crawling, evidence capture, resume, data preparation, PDF rendering and packaging infrastructure work. Desktop consent handling is implemented; Q1–Q12 remain student tasks. The PDF is a visibly marked draft.
 
 ## Setup (Windows PowerShell, Python 3.12)
 
@@ -37,7 +37,9 @@ python crawler_src/crawl.py -m mobile -l sites.csv
 python crawler_src/crawl.py -m block -l sites.csv
 ```
 
-**Desktop, Mobile and Block deliberately fail preflight until consent is implemented.** Implement `accept_consent(page)` in `crawler_src/consent.py`, verify it against generic dialogs/frames, then set `IMPLEMENTED = True`. Return `accepted`, `not_found` or `failed`. A failed interaction is retained for diagnosis, not marked complete. There is no production bypass or silent fallback to Ignore.
+**Desktop is ready to run.** The generic consent handler prefers explicit accept-all controls, then consent-scoped English/Dutch acceptance labels and recognized CMP controls. It searches visible banners/dialogs, frames and open shadow roots, and verifies banner dismissal. `accepted` means an acceptance control was clicked and its banner disappeared; `not_found` means no supported banner was detected, not proof that consent was unnecessary. Unknown detected dialogs, disabled controls and clicks without dismissal return `failed`, retaining diagnostic evidence and leaving the visit retryable.
+
+Start Desktop with `python crawler_src/crawl.py -m desktop -l sites.csv`. Repeat the same command to resume. Review screenshots for `not_found` and failed visits. Preference-only flows, closed shadow roots and unfamiliar labels may need generic selector/keyword extensions; no site-specific code or external consent APIs are used. The shared handler is also used by Mobile and Block.
 
 The required Pixel 10 descriptor is present in Playwright 1.64.1. An installation without it fails clearly. Desktop modes use 1366×768; mobile uses the full descriptor. All modes use `en-GB`, `Europe/Amsterdam`, blocked service workers and request routing. Routing disables browser HTTP caching consistently across modes. Record these measurement choices as limitations in the report.
 
@@ -66,7 +68,7 @@ The Public Suffix List is loaded from the local checked snapshot, including its 
 
 ## Finish the assignment
 
-1. Implement and test generic consent handling; do not use site-specific branches, extensions, online APIs or LLM calls.
+1. Review consent outcomes in the saved evidence; extend generic selectors/labels if a banner is unsupported.
 2. Collect and inspect all four modes. Check screenshots and videos, especially `not_found` consent outcomes.
 3. Run preparation, implement Q1–Q12 in `analysis/questions.py`, and run each question. See `analysis/README.md` for dataset contracts.
 4. Populate the report template with actual plots/tables, self-explanatory captions and Q13 reflections. Remove placeholder `.todo` blocks and the draft badge, then change the body to `data-draft="false"`.

@@ -1,0 +1,6 @@
+# Preserve downloaded bytes: reference integrity checks depend on these hashes.
+sites.csv text eol=lf
+crawler_src/reference_data/services.json text eol=lf
+crawler_src/reference_data/entities.json text eol=lf
+crawler_src/reference_data/public_suffix_list.dat text eol=lf
+crawler_src/reference_data/DISCONNECT-LICENSE text eol=lf
