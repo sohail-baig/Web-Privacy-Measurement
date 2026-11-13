@@ -5,7 +5,7 @@ python -m analysis.run --prepare
 python -m analysis.run --question 1
 ```
 
-Optional `--root PATH` selects another measurement root. The preparation step is implemented; Q1–Q12 intentionally raise `NotImplementedError`. Q13 is written in the report. Keep each question clearly labeled when implementing it.
+Optional `--root PATH` selects another measurement root. The preparation step is implemented; Q1–Q7 and Q9–Q11 are implemented (`q1_per_visit.csv` + four `q1_*.png` box plots, `q2.csv`, `q3.csv` + two `q3_*.png` bar plots, `q4.csv`, `q5.csv` + two `q5_*.png` bar plots, `q6.csv`, `q7_<mode>.csv`, `q9.csv`, `q10.csv`, `q11.csv`); Q8 and Q12 still raise `NotImplementedError`. Q13 is written in the report. Keep each question clearly labeled when implementing it.
 
 ## Prepared datasets
 
