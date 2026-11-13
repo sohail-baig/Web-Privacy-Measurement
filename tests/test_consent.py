@@ -80,6 +80,40 @@ class ConsentTests(unittest.TestCase):
         self.assertEqual(accept_consent(self.page), 'failed')
         self.assertTrue(self.page.get_by_role('dialog').is_visible())
 
+    def test_accept_wordings_seen_on_crawled_sites(self):
+        for label in ('I Accept Cookies', "I'm OK with that", 'Accept recommended settings',
+                      'Accept all functional, advertising and performance cookies'):
+            with self.subTest(label=label):
+                self.page.set_content(f'''<div role="dialog">We use cookies
+                    <button onclick="window.rejected=true">Reject all cookies</button>
+                    <button onclick="this.parentElement.remove()">{label}</button></div>''')
+                self.assertEqual(accept_consent(self.page), 'accepted')
+                self.assertFalse(self.page.evaluate('Boolean(window.rejected)'))
+
+    def test_tiered_prompt_selects_complete_level(self):
+        self.page.set_content('''<div class="cookieconsent"><p>Choose your cookie level</p>
+            <button onclick="window.wrong=true">Essential Provides basic functions and uses anonymized cookies.</button>
+            <button onclick="this.parentElement.remove()">Complete Provides personalized content and uses marketing cookies.</button></div>''')
+        self.assertEqual(accept_consent(self.page), 'accepted')
+        self.assertFalse(self.page.evaluate('Boolean(window.wrong)'))
+
+    def test_emptied_wrapper_with_hidden_consent_copy_is_not_a_banner(self):
+        self.page.set_content('''<div class="consent-host"><button aria-label="Cookie settings"></button>
+            <span hidden>Cookie consent preferences</span>
+            <div role="dialog">We use cookies <button onclick="this.parentElement.remove()">Accept all</button></div></div>''')
+        self.assertEqual(accept_consent(self.page), 'accepted')
+
+    def test_wrapper_that_stays_rendered_after_acceptance(self):
+        self.page.set_content('''<div class="cookie-wrap" style="min-height:20px">
+            <div id="prompt">We use cookies <button onclick="document.querySelector('#prompt').remove()">Accept all</button></div></div>''')
+        self.assertEqual(accept_consent(self.page), 'accepted')
+
+    def test_static_notice_below_the_fold_is_not_a_prompt(self):
+        self.page.set_content('''<div style="height:3000px"></div>
+            <div class="cookie">We use cookies <button onclick="window.clicked=true">I Accept</button></div>''')
+        self.assertEqual(accept_consent(self.page), 'not_found')
+        self.assertFalse(self.page.evaluate('Boolean(window.clicked)'))
+
     def test_settings_launcher_left_after_acceptance_is_not_a_banner(self):
         self.page.set_content('''<div id="cookie-wrapper"><div role="dialog">We use cookies
             <button onclick="this.parentElement.remove()">Accept all</button></div>

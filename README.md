@@ -1,6 +1,6 @@
 # Online Tracking & Privacy — Assignment 2
 
-Runnable foundation for NWI-IMC074. **This is not a completed assignment.** Ignore crawling, evidence capture, resume, data preparation, PDF rendering and packaging infrastructure work. Desktop consent handling is implemented; Q1–Q12 remain student tasks. The PDF is a visibly marked draft.
+Runnable foundation for NWI-IMC074. **This is not a completed assignment.** Ignore crawling, evidence capture, resume, data preparation, PDF rendering and packaging infrastructure work. Consent handling is implemented and validated on Desktop and Mobile; Q1–Q12 remain student tasks. The PDF is a visibly marked draft.
 
 ## Setup (Windows PowerShell, Python 3.12)
 
@@ -37,9 +37,9 @@ python crawler_src/crawl.py -m mobile -l sites.csv
 python crawler_src/crawl.py -m block -l sites.csv
 ```
 
-**Desktop is ready to run.** The generic consent handler prefers explicit accept-all controls, then consent-scoped English/Dutch acceptance labels and recognized CMP controls. It searches visible banners/dialogs, frames and open shadow roots, and verifies banner dismissal. `accepted` means an acceptance control was clicked and its banner disappeared; `not_found` means no supported banner was detected, not proof that consent was unnecessary. Unknown detected dialogs, disabled controls and clicks without dismissal return `failed`, retaining diagnostic evidence and leaving the visit retryable.
+**Desktop and Mobile are ready to run.** The generic consent handler prefers explicit accept-all controls (including a tiered prompt's "Complete" level), then consent-scoped English/Dutch acceptance labels and recognized CMP controls. It searches on-screen banners/dialogs, frames and open shadow roots, and verifies dismissal. `accepted` means an acceptance control was clicked, its banner or control disappeared and no active prompt remains; `not_found` means no supported banner was detected, not proof that consent was unnecessary. Unknown detected dialogs, disabled controls and clicks without dismissal return `failed`, retaining diagnostic evidence and leaving the visit retryable.
 
-Start Desktop with `python crawler_src/crawl.py -m desktop -l sites.csv`. Repeat the same command to resume. Review screenshots for `not_found` and failed visits. Preference-only flows, closed shadow roots and unfamiliar labels may need generic selector/keyword extensions; no site-specific code or external consent APIs are used. The shared handler is also used by Mobile and Block.
+Start Desktop with `python crawler_src/crawl.py -m desktop -l sites.csv` (Mobile: `-m mobile`). Repeat the same command to resume. Review screenshots for `not_found` and failed visits. Preference-only flows, closed shadow roots and unfamiliar labels may need generic selector/keyword extensions; no site-specific code or external consent APIs are used. The shared handler is also used by Mobile and Block.
 
 The required Pixel 10 descriptor is present in Playwright 1.64.1. An installation without it fails clearly. Desktop modes use 1366×768; mobile uses the full descriptor. All modes use `en-GB`, `Europe/Amsterdam`, blocked service workers and request routing. Routing disables browser HTTP caching consistently across modes. Record these measurement choices as limitations in the report.
 
