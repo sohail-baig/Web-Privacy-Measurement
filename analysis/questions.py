@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')  # draw straight to PNG files, no window
 import matplotlib.pyplot as plt
 import pandas as pd
+import dns.resolver, dns.exception
 
 
 MODE_ORDER = ['desktop', 'mobile', 'block', 'ignore']
@@ -301,8 +302,56 @@ def q7(root):
     return files
 
 
+
+def sites_to_third_party(requests, mode):
+    """Website -> number of distinct third-party domains contacted in one mode"""
+    rows = requests[(requests['mode'] == mode) & (requests['is_third_party'] == True)]
+    return rows.groupby('site')['domain'].nunique()
+
+def frequency(counts, limit):
+    """Return the highest or lowest counts"""
+    if limit > 0:
+        return sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    else:
+        return sorted(counts.items(), key=lambda item: (item[1], item[0]))[:abs(limit)]
+
+
 def q8(root):
-    raise NotImplementedError('Q8: Desktop highest and lowest three sites by distinct third-party domains; join dated local Tranco ranks, country and counts.')
+    """Q8: Mode Desktop: highest and lowest three sites by distinct third-party domains; join dated local Tranco ranks, country and counts."""
+    output, visits, requests = load_prepared(root)
+    mode = "desktop"
+    if visits.empty:
+        raise ValueError("Q8: no completed Desktop visits in visits.csv. Crawl desktop and run --prepare first.")
+
+    files = []
+    
+    two_table = {"highest":3, "lowest":-3}
+    tranco = pd.read_csv(root / 'analysis/tranco.csv')
+    visits = visits[visits["mode"] == mode]
+    requests = requests[requests["mode"] == mode]
+    
+    amount = sites_to_third_party(requests, mode)
+
+    for k,v in two_table.items():
+        table = []
+        top_or_bottom = frequency(amount, v)
+        for domain, count in top_or_bottom:
+            country = (visits[visits['site'] == domain].iloc[0]['country'])
+            rank = tranco[tranco['domain'] == domain].iloc[0]['rank']
+
+            table.append({
+                    'Website': domain,
+                    'Tranco rank': rank,
+                    'Country': country,
+                    'Number of distinct third-party domains': count
+            })
+            
+        file = output / f'q8_{k}_desktop.csv'
+        pd.DataFrame(table, columns=['Website', 'Tranco rank', 'Country', 'Number of distinct third-party domains']).to_csv(file, index=False)
+        files.append(file)
+
+    return files
+
 
 
 def q9(root):
@@ -409,9 +458,173 @@ def q11(root):
 
     return [file]
 
+def load_entities(root):
+    with open(root / "analysis/entities.json", encoding="utf-8") as f:
+        data = json.load(f)
+
+    domain_to_entity = {}
+
+    for entity, i in data["entities"].items():
+        for domain in i["properties"] + i["resources"]:
+            domain_to_entity.setdefault(domain, set()).add(entity)
+
+    return domain_to_entity
+
+def load_blocklist(root):
+    with open(root / "analysis/services.json", encoding='utf-8') as f:
+        services = json.load(f)
+
+    lookup = {}
+
+    for category, entries in services["categories"].items():
+        for entry in entries:
+            entity, websites = next(iter(entry.items()))
+
+            for domains in websites.values():
+                for domain in domains:
+                    lookup.setdefault(domain, {}).setdefault(entity, set()).add(category)
+    return lookup
+
+def load_dns_cache(output):
+    file = output / "dns_cache.json"
+
+    if file.exists():
+        with open(file, encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+def save_dns_cache(output, cache):
+    file = output / "dns_cache.json"
+
+    with open(file, 'w', encoding='utf-8') as f:
+        json.dump(cache, f, indent=4)
+
+def cname_chain(hostname, timeout=5, max_chain=20):
+    hostname = hostname.lower().rstrip('.')
+    visited = {hostname}
+    chain = []
+    current = hostname
+
+    result = {
+        "queried_at_utc": str(pd.Timestamp.now(tz="Europe/Amsterdam")),
+        "status": None,
+        "chain": [],
+        "error": None
+    }
+
+    resolver = dns.resolver.Resolver()
+
+    try:
+        for _ in range(max_chain):
+            answer = resolver.resolve(current,"CNAME",
+                lifetime=timeout,
+                search=False,
+                raise_on_no_answer=False
+            )
+
+            if answer.rrset == None:
+                result["status"] = "ok" if chain else "no_cname"
+                break
+            
+            target = str(answer.rrset[0].target).lower().rstrip('.')
+
+            chain.append({
+                "source": current,
+                "target": target
+            })
+            
+            if target in visited:
+                result["status"] = "loop"
+                result["error"] = f"CNAME loop detected: {target}"
+                break
+
+            visited.add(target)
+            current = target
+            
+        else:
+            result["status"] = "error"
+            result["error"] = "Maximum chain depth reached"
+        
+    except dns.resolver.NXDOMAIN as e:
+        result["status"] = "nxdomain"
+        result["error"] = str(e)
+    except dns.exception.Timeout as e:
+        result["status"] = "timeout"
+        result["error"] = str(e)
+    except Exception as e:
+        result["status"] = "error"
+        result["error"] = str(e)
+
+    result["chain"] = chain
+    return result
+
+def get_dns_result(hostname, cache):
+    hostname = hostname.lower().rstrip('.')
+    if hostname not in cache:
+        cache[hostname] = cname_chain(hostname)
+
+    return cache[hostname]
+
+def match_blocklist(target, domain_lookup, entity_lookup):
+    target = target.lower().rstrip('.')
+    return [
+        (entity, sorted(categories))
+        for domain, categories in domain_lookup.items()
+        if target == domain or target.endswith('.' + domain)
+        for entity in entity_lookup.get(domain, {'Unknown'})]
+     
 
 def q12(root):
-    raise NotImplementedError('Q12: add dnspython; follow first-party subdomain CNAME chains with timeouts/loop detection; cache timestamped answers/errors; match any Disconnect category and entity; four tables. See README.md for cache format.')
+    output, visits, requests = load_prepared(root)
 
+    if visits.empty:
+        raise ValueError('Q12: no completed visits in visits.csv. Crawl and run --prepare first.')
+
+    files = []
+    domain_lookup = load_blocklist(root)
+    entity_lookup = load_entities(root)
+    cache = load_dns_cache(output)
+
+    #print(domain_lookup)
+
+    for mode in observed_modes(visits):
+        first_party = visits[visits['mode'] == mode][['site', 'first_party_domain']].drop_duplicates('site')
+        rows = requests[(requests['mode'] == mode) & (requests['is_third_party'] == False)].merge(first_party,how="left",on="site")
+
+        #Keep only actual first-party /subdomains/
+        rows = rows[
+            rows.apply(
+                lambda r: pd.notna(r['hostname']) and
+                pd.notna(r['first_party_domain']) and
+                r['hostname'].rstrip('.').endswith('.' + r['first_party_domain'].rstrip('.')),
+                axis=1)
+        ]
+
+        hostnames = rows['hostname'].dropna().str.lower().str.rstrip('.').unique()
+        
+        table = []
+
+        for hostname in hostnames:
+            result = get_dns_result(hostname, cache)
+
+            table.extend([
+                {
+                    "First-party subdomain": hostname,
+                    "CNAME record": link["target"].lower().rstrip('.'),
+                    "CNAME entity": entity,
+                    "Disconnect categories": ', '.join(categories)
+                }
+                for link in result["chain"]
+                for entity, categories in match_blocklist(link['target'], domain_lookup, entity_lookup)
+            ])
+
+        file = output / f'q12_{mode}.csv'
+
+        pd.DataFrame(table, columns=['First-party subdomain', 'CNAME record', 'CNAME entity', 'Disconnect categories']).drop_duplicates().to_csv(file, index=False)
+        files.append(file)
+
+    save_dns_cache(output, cache)
+
+    return files
 
 QUESTIONS = {1:q1, 2:q2, 3:q3, 4:q4, 5:q5, 6:q6, 7:q7, 8:q8, 9:q9, 10:q10, 11:q11, 12:q12}
