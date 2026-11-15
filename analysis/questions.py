@@ -301,8 +301,56 @@ def q7(root):
     return files
 
 
+
+def sites_to_third_party(requests, mode):
+    """Website -> number of distinct third-party domains contacted in one mode"""
+    rows = requests[(requests['mode'] == mode) & (requests['is_third_party'] == True)]
+    return rows.groupby('site')['domain'].nunique()
+
+def frequency(counts, limit):
+    """Return the highest or lowest counts"""
+    if limit > 0:
+        return sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    else:
+        return sorted(counts.items(), key=lambda item: (item[1], item[0]))[:abs(limit)]
+
+
 def q8(root):
-    raise NotImplementedError('Q8: Desktop highest and lowest three sites by distinct third-party domains; join dated local Tranco ranks, country and counts.')
+    """Q8: Mode Desktop: highest and lowest three sites by distinct third-party domains; join dated local Tranco ranks, country and counts."""
+    output, visits, requests = load_prepared(root)
+    mode = "desktop"
+    if visits.empty:
+        raise ValueError("Q8: no completed Desktop visits in visits.csv. Crawl desktop and run --prepare first.")
+
+    files = []
+    
+    two_table = {"highest":3, "lowest":-3}
+    tranco = pd.read_csv(root / 'analysis/tranco.csv')
+    visits = visits[visits["mode"] == mode]
+    requests = requests[requests["mode"] == mode]
+    
+    amount = sites_to_third_party(requests, mode)
+
+    for k,v in two_table.items():
+        table = []
+        top_or_bottom = frequency(amount, v)
+        for domain, count in top_or_bottom:
+            country = (visits[visits['site'] == domain].iloc[0]['country'])
+            rank = tranco[tranco['domain'] == domain].iloc[0]['rank']
+
+            table.append({
+                    'Website': domain,
+                    'Tranco rank': rank,
+                    'Country': country,
+                    'Number of distinct third-party domains': count
+            })
+            
+        file = output / f'q8_{k}_desktop.csv'
+        pd.DataFrame(table, columns=['Website', 'Tranco rank', 'Country', 'Number of distinct third-party domains']).to_csv(file, index=False)
+        files.append(file)
+
+    return files
+
 
 
 def q9(root):
