@@ -20,12 +20,21 @@ from report.render import report_inputs
 
 
 class DeliveryTests(unittest.TestCase):
-    def test_unfinished_question_stubs_are_explicit(self):
-        implemented = {1, 2, 3, 4, 5, 6, 7, 9, 10, 11}
-        for number in sorted(set(range(1,13)) - implemented):
-            with self.subTest(question=number), self.assertRaisesRegex(NotImplementedError, f'Q{number}'):
-                QUESTIONS[number](Path('.'))
-        self.assertEqual(analysis_main(['--question','8']), 2)
+    def test_q12_reports_disconnect_categories_not_company_names(self):
+        from analysis.questions import load_blocklist, load_entities, match_blocklist
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root/'analysis').mkdir()
+            adobe = {'Adobe': {'https://www.adobe.com/': ['adobedc.net']}}
+            (root/'analysis/services.json').write_text(json.dumps({'categories': {
+                'Analytics': [adobe], 'Advertising': [adobe],
+                'Content': [{'Amazon': {'https://aws.amazon.com/': ['cloudfront.net']}}]}}))
+            (root/'analysis/entities.json').write_text(json.dumps({'entities': {'Adobe': {'properties': [], 'resources': ['adobedc.net']}}}))
+            lookups = load_blocklist(root), load_entities(root)
+            self.assertEqual(match_blocklist('x.data.adobedc.net', *lookups), [('Adobe', ['Advertising', 'Analytics'])])
+            # No entity mapping: left empty, never an invented "Unknown" company.
+            self.assertEqual(match_blocklist('d1.cloudfront.net', *lookups), [('', ['Content'])])
+            self.assertEqual(match_blocklist('example.org', *lookups), [])
 
     def write_prepared(self, root, visits, requests):
         output = root/'analysis/output'

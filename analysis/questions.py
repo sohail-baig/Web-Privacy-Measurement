@@ -506,7 +506,7 @@ def cname_chain(hostname, timeout=5, max_chain=20):
     current = hostname
 
     result = {
-        "queried_at_utc": str(pd.Timestamp.now(tz="Europe/Amsterdam")),
+        "queried_at_utc": str(pd.Timestamp.now(tz="UTC")),
         "status": None,
         "chain": [],
         "error": None
@@ -568,10 +568,11 @@ def get_dns_result(hostname, cache):
 def match_blocklist(target, domain_lookup, entity_lookup):
     target = target.lower().rstrip('.')
     return [
-        (entity, sorted(categories))
+        # Each lookup value maps company -> categories; report the categories, not the company keys.
+        (entity, sorted(set().union(*categories.values())))
         for domain, categories in domain_lookup.items()
         if target == domain or target.endswith('.' + domain)
-        for entity in entity_lookup.get(domain, {'Unknown'})]
+        for entity in entity_lookup.get(domain, {''})]
      
 
 def q12(root):
