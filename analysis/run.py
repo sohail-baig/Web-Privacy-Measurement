@@ -33,14 +33,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Prepare received-response data or run one assignment question.')
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('--prepare', action='store_true')
-    action.add_argument('--question', type=int, choices=range(1,13))
+    action.add_argument('--question', type=int, nargs='+', choices=range(1,13))
     parser.add_argument('--root', type=Path, default=ROOT)
     args = parser.parse_args(argv)
     try:
         if args.prepare:
             print(prepare(args.root))
         else:
-            execute_question(args.question, args.root)
+            for number in args.question:
+                print(f"Running question {number}...")
+                execute_question(number, args.root)
+                print(f"Question {number} completed successfully.")
         return 0
     except Exception as exc:
         print(f'{type(exc).__name__}: {exc}', file=sys.stderr)
