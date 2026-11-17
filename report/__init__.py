@@ -1,1 +1,0 @@
-"""Local PDF report rendering."""

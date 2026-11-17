@@ -1,1 +1,1 @@
-"""Offline analysis preparation and explicitly unfinished assignment questions."""
+"""HAR preparation and analysis for Q1-Q12."""

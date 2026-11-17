@@ -312,7 +312,7 @@ def q8(root):
     files = []
     
     two_table = {"highest":3, "lowest":-3}
-    tranco = pd.read_csv(root / 'analysis/tranco.csv')
+    tranco = pd.read_csv(root / 'crawler_src/reference_data/tranco.csv')
     visits = visits[visits["mode"] == mode]
     requests = requests[requests["mode"] == mode]
     
@@ -442,7 +442,7 @@ def q11(root):
     return [file]
 
 def load_entities(root):
-    with open(root / "analysis/entities.json", encoding="utf-8") as f:
+    with open(root / "crawler_src/reference_data/entities.json", encoding="utf-8") as f:
         data = json.load(f)
 
     domain_to_entity = {}
@@ -454,7 +454,7 @@ def load_entities(root):
     return domain_to_entity
 
 def load_blocklist(root):
-    with open(root / "analysis/services.json", encoding='utf-8') as f:
+    with open(root / "crawler_src/reference_data/services.json", encoding='utf-8') as f:
         services = json.load(f)
 
     lookup = {}

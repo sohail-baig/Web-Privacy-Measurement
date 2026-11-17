@@ -1,58 +1,50 @@
-# Online Tracking & Privacy — Assignment 2
+# Online Tracking & Privacy - Assignment 2
 
-Web privacy measurement of 30 university homepages (10 NL, 10 UK, 10 US) in four crawl modes. The crawler visits each site with Playwright (Chromium) and saves a HAR file, screenshots and a video. The analysis turns that data into the tables and plots for Q1–Q12, which are in `report.ipynb`.
+Run all commands from the project root (the folder containing `report.ipynb`).
 
 ## Install
 
-Needs Python 3.12. From the project folder:
+Python 3.12, Windows PowerShell:
 
-```
+```powershell
 py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m playwright install chromium
 ```
 
-## Run the crawler
+If activation is unavailable, replace `python` below with `.\.venv\Scripts\python.exe`.
 
+## Crawl
+
+```powershell
+python crawler_src/crawl.py -m desktop -l crawler_src/sites.csv
+python crawler_src/crawl.py -m mobile -l crawler_src/sites.csv
+python crawler_src/crawl.py -m block -l crawler_src/sites.csv
+python crawler_src/crawl.py -m ignore -l crawler_src/sites.csv
 ```
-python crawler_src/crawl.py -m desktop -l sites.csv
-python crawler_src/crawl.py -m mobile -l sites.csv
-python crawler_src/crawl.py -m block -l sites.csv
-python crawler_src/crawl.py -m ignore -l sites.csv
-```
 
-- `-m` is the crawl mode, `-l` the site list (`domain,country` per line).
-- Results go to `crawl_data_<mode>/`: `<site>.har`, `<site>_pre_consent.png`, `<site>_post_consent.png` (not in ignore mode) and `<site>.webm`.
-- If the crawler stops or a site fails, run the same command again. Finished sites are skipped (tracked in `manifest.json`).
+The list contains 30 universities: ten each from NL, UK and US. Each visit uses a fresh Chromium context, `en-GB` locale and `Europe/Amsterdam` timezone. Desktop uses 1366 x 768; Mobile requires the actual Pixel 10 preset. Block filters Advertising, Analytics, Social, FingerprintingInvasive and FingerprintingGeneral using frozen Disconnect lists. Service workers are blocked and routing is installed in every mode.
 
-| Mode | Browser | Cookies | Blocking |
-|---|---|---|---|
-| desktop | Chromium, 1366×768 | accept all | none |
-| mobile | Chromium as Pixel 10 | accept all | none |
-| block | Chromium, 1366×768 | accept all | Disconnect: Advertising, Analytics, Social, FingerprintingInvasive, FingerprintingGeneral |
-| ignore | Chromium, 1366×768 | no interaction | none |
+Sequence: load (60-second timeout), wait 10 seconds, pre-consent screenshot, accept consent, wait 5 seconds, post-consent screenshot, bounded scrolling, wait 5 seconds, close. Ignore skips consent, its wait and the post-consent screenshot. The handler checks English/Dutch controls in frames and open shadow roots and verifies dismissal. Review `not_found` screenshots manually; unfamiliar banners can be missed.
 
-Each visit: load page → wait 10 s → accept cookies → wait 5 s → scroll to the bottom in steps → wait 5 s → close. Ignore mode skips the cookie step and its wait.
+Results are saved as `<site>.har`, `<site>_pre_consent.png`, `<site>_post_consent.png` and `<site>.webm` in `crawl_data_<mode>/`. Ignore has no post-consent screenshot. `manifest.json` records outcomes and enables resume. Repeat the same command to retry failed visits and skip completed ones. Changed code/settings/reference inputs require a separate run with `--output-root measurements/run-02`; preserve original evidence.
 
-**Cookie banners:** `consent.py` looks for cookie/consent dialogs on the page (including iframes) and clicks an "accept all" style button, using English and Dutch keywords. It checks that the banner actually closed. No online services or browser extensions are used. If no banner is found the result is `not_found`; check those screenshots by hand.
+## Analyse and read the report
 
-## Run the analysis
-
-```
+```powershell
 python -m analysis.run --prepare
 python -m analysis.run --question 1 2 3 4 5 6 7 8 9 10 11 12
 ```
 
-`--prepare` reads the HAR files of all four crawls into `analysis/output/visits.csv` and `requests.csv`. Each question then saves its results in `analysis/output/`:
+Preparation requires the original crawl artifacts and manifests. Results are generated in `analysis/output/`. Analysis counts received HTTP responses, keeps completed visits with zero requests, and measures third-partyness against the final page domain. Shared Disconnect and Public Suffix List snapshots are in `crawler_src/reference_data/`; Q8 uses `tranco.csv` there. Q12 saves timestamped DNS results in `analysis/output/dns_cache.json`. Preserve the original cache to reproduce the report instead of querying current DNS.
 
-| Question | Files |
-|---|---|
-| Q1 | `q1_*.png` (4 box plots), `q1_per_visit.csv` |
-| Q2, Q4, Q6, Q9, Q10, Q11 | `q2.csv`, `q4.csv`, `q6.csv`, `q9.csv`, `q10.csv`, `q11.csv` |
-| Q3, Q5 | `q3.csv` / `q5.csv` plus `*_advertising.png` and `*_analytics.png` |
-| Q7, Q12 | one CSV per mode: `q7_<mode>.csv`, `q12_<mode>.csv` |
-| Q8 | `q8_highest_desktop.csv`, `q8_lowest_desktop.csv` |
+Open `report.ipynb` in a notebook viewer to read its saved text, figures and tables without execution. To rerun it, open it from this project root after restoring the original analysis outputs. Set `RECOMPUTE = True` only with the original prepared CSVs and DNS cache. A Jupyter-capable editor is optional; crawler and analysis commands need only `requirements.txt`.
 
-Only requests that got a response are counted. A request is third-party when its domain (eTLD+1) differs from the visited page's domain. Tracker categories and companies come from Disconnect's lists in `crawler_src/reference_data/`. Q8 uses the Tranco ranks in `analysis/tranco.csv` (list from 14 November 2026). Q12 looks up CNAME records with dnspython and saves them in `analysis/output/dns_cache.json`, so later runs give the same results.
+## Submission contents and remaining data
 
-All four crawls were done on 13 November 2026 from the same laptop and network.
+Submit `report.ipynb`, `crawler_src/`, `analysis/`, the four `crawl_data_<mode>/` folders and `requirements.txt`. Keep only Python source in `analysis/` for the requested layout; generated outputs are working files. Keep crawl manifests alongside the artifacts so preparation can reproduce the datasets. Exclude `.git/`, `.venv/`, `__pycache__/`, `.staging/`, notebook checkpoints and `.gitkeep` placeholders from the upload.
+
+**This checkout does not contain crawl artifacts or the original DNS cache.** Git excludes these files. Restore them from the measurement machine before submission. The saved report describes 119 completed visits (30 Desktop, 29 Mobile, 30 Block, 30 Ignore); check its missing Mobile visit and limitations against the original evidence. Cleaning the source tree does not verify those results.
+
+The two `__init__.py` files mark `crawler_src` and `analysis` as Python packages. Keep them for predictable imports and `python -m analysis.run`.

@@ -2,9 +2,8 @@
 __pycache__/
 *.py[cod]
 *.zip
-*.pending.pdf
 crawl_data_*/*
 !crawl_data_*/.gitkeep
 analysis/output/
 measurements/
-report/build.json
+.ipynb_checkpoints/
