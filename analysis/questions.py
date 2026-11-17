@@ -1,10 +1,4 @@
-"""Assignment questions Q1–Q12 (Q8 and Q12 unfinished). Each returns a list of generated output Paths.
-
-Read output/visits.csv and output/requests.csv; decode the three JSON-list columns.
-Use visits as the denominator, including zero-request visits. Unknown entities are
-not invented entities; report mapping coverage. Never count aborted requests.
-Save CSV tables and PNG plots under output/, with deterministic ties by domain.
-"""
+"""Q1–Q12. Each qN(root) writes its tables/plots to analysis/output and returns their paths."""
 
 
 import json
@@ -21,7 +15,7 @@ MODE_ORDER = ['desktop', 'mobile', 'block', 'ignore']
 MODE_LABELS = {'desktop': 'Desktop', 'mobile': 'Mobile', 'block': 'Block', 'ignore': 'Ignore'}
 COUNTRY_ORDER = ['NL', 'UK', 'US']
 
-# The four per-visit numbers used by Q1, Q2 and Q4, with readable axis titles.
+# Per-visit metrics for Q1, Q2 and Q4 with their axis titles.
 METRICS = ['requests', 'third_party_requests', 'third_party_domains', 'third_party_entities']
 METRIC_TITLES = {
     'requests': 'Requests',
@@ -40,11 +34,7 @@ def load_prepared(root):
 
 
 def visit_metrics(visits, requests):
-    """One row per visit with the four metrics.
-
-    Visits are the denominator, so a visit without any request still counts (as zeros).
-    Entities come only from third-party requests; unknown domains add no entity.
-    """
+    """One row per visit with the four metrics; visits without requests count as zeros."""
     rows = []
 
     for _, visit in visits.iterrows():
@@ -105,7 +95,6 @@ def q1(root):
     modes = observed_modes(visits)
     files = []
 
-    # The numbers behind the plots, so every box can be checked.
     table = output / 'q1_per_visit.csv'
     data.assign(mode=data['mode'].map(MODE_LABELS)).to_csv(table, index=False)
     files.append(table)
@@ -148,10 +137,7 @@ CATEGORIES = ['Advertising', 'Analytics']
 
 
 def category_sites(visits, requests, column, groups):
-    """Per group: visited sites and distinct sites with a received response in each category.
-
-    All received requests count (first- and third-party), as the analysis README says.
-    """
+    """Per group: sites visited and sites with a response in each category (all requests count)."""
     rows = []
 
     for group in groups:
@@ -317,7 +303,7 @@ def frequency(counts, limit):
 
 
 def q8(root):
-    """Q8: Mode Desktop: highest and lowest three sites by distinct third-party domains; join dated local Tranco ranks, country and counts."""
+    """Q8: Desktop sites with the most and fewest third-party domains, with Tranco rank and country."""
     output, visits, requests = load_prepared(root)
     mode = "desktop"
     if visits.empty:
@@ -426,10 +412,7 @@ REFERRER_POLICIES = {'no-referrer', 'no-referrer-when-downgrade', 'same-origin',
 
 
 def effective_referrer_policy(values):
-    """The policy a browser applies: the last recognized token over repeated, comma-separated values.
-
-    Unknown tokens are skipped, so 'no-referrer, future-policy' still means no-referrer.
-    """
+    """Last recognized policy over repeated, comma-separated values (unknown tokens are skipped)."""
     tokens = [token.strip().lower() for value in values for token in value.split(',')]
     recognized = [token for token in tokens if token in REFERRER_POLICIES]
     return recognized[-1] if recognized else None
@@ -568,7 +551,7 @@ def get_dns_result(hostname, cache):
 def match_blocklist(target, domain_lookup, entity_lookup):
     target = target.lower().rstrip('.')
     return [
-        # Each lookup value maps company -> categories; report the categories, not the company keys.
+        # value is company -> categories
         (entity, sorted(set().union(*categories.values())))
         for domain, categories in domain_lookup.items()
         if target == domain or target.endswith('.' + domain)
@@ -586,13 +569,12 @@ def q12(root):
     entity_lookup = load_entities(root)
     cache = load_dns_cache(output)
 
-    #print(domain_lookup)
 
     for mode in observed_modes(visits):
         first_party = visits[visits['mode'] == mode][['site', 'first_party_domain']].drop_duplicates('site')
         rows = requests[(requests['mode'] == mode) & (requests['is_third_party'] == False)].merge(first_party,how="left",on="site")
 
-        #Keep only actual first-party /subdomains/
+        # first-party subdomains only
         rows = rows[
             rows.apply(
                 lambda r: pd.notna(r['hostname']) and

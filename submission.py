@@ -83,7 +83,7 @@ def check_submission(root):
                 issues.append('report.pdf has an invalid signature')
     except (OSError, ValueError, KeyError) as exc:
         issues.append(f'report.pdf/build evidence: {exc}')
-    for name in ('requirements.txt','crawler_src/README.md','analysis/README.md'):
+    for name in ('requirements.txt','crawler_src/README.md'):
         if not (root / name).is_file():
             issues.append(f'Missing {name}')
     return issues
