@@ -2,19 +2,6 @@
 
 Run all commands from the project root (the folder containing `report.ipynb`).
 
-## Install
-
-Python 3.12, Windows PowerShell:
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m playwright install chromium
-```
-
-If activation is unavailable, replace `python` below with `.\.venv\Scripts\python.exe`.
-
 ## Crawl
 
 ```powershell
