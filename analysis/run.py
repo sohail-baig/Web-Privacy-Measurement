@@ -5,6 +5,7 @@ import sys
 from crawler_src.common import ROOT, atomic_json, read_json, sha256
 from analysis.prepare import prepare
 from analysis.questions import QUESTIONS
+from analysis.report import build_report
 
 
 def execute_question(number, root):
@@ -44,6 +45,7 @@ def main(argv=None):
                 print(f"Running question {number}...")
                 execute_question(number, args.root)
                 print(f"Question {number} completed successfully.")
+            print(f'Report written to {build_report(args.root)}')
         return 0
     except Exception as exc:
         print(f'{type(exc).__name__}: {exc}', file=sys.stderr)
