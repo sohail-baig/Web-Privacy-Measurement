@@ -1,5 +1,3 @@
-# Online Tracking & Privacy - Assignment 2
-
 Run all commands from the project root (the folder containing `report.ipynb`).
 
 ## Crawl
